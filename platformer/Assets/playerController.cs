@@ -13,6 +13,13 @@ public class playerController : MonoBehaviour
     public float gravity = 0.5f;
     public float max_fall_speed = 9.8f;
 
+    public LayerMask mask;
+    private RaycastHit2D groundCheckL;
+    private RaycastHit2D groundCheckR;
+
+    private bool jumpCheck;
+    public float jumpForce = 15f;
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -49,6 +56,15 @@ public class playerController : MonoBehaviour
         }
 
         direction = direction.normalized;
+
+        if (Input.GetKey(KeyCode.Space))
+        {
+            jumpCheck = true;
+        }
+        else
+        {
+            jumpCheck = false;
+        }
     }
 
     private void FixedUpdate()
@@ -61,10 +77,34 @@ public class playerController : MonoBehaviour
             velocity.x = Mathf.MoveTowards(velocity.x, 0, friction);
         }
 
-        velocity.y -= gravity;
+        groundCheckL = Physics2D.Raycast(rb.position + new Vector2(-0.5f, 0), Vector2.down, 1, mask);
+        groundCheckR = Physics2D.Raycast(rb.position + new Vector2(0.5f, 0), Vector2.down, 1, mask);
+        float groundOffset = 0;
 
-        velocity.y = Mathf.Max(velocity.y, -max_fall_speed);
+        if (groundCheckL || groundCheckR)
+        {
+            groundOffset = Mathf.Max(groundCheckL.distance, groundCheckR.distance) - 0.5f;
+            velocity.y = 0;
 
-        rb.MovePosition(rb.position + (velocity * Time.fixedDeltaTime));
+            if (jumpCheck)
+            {
+                velocity.y = jumpForce;
+            }
+        }
+        else
+        {
+            velocity.y -= gravity;
+
+            velocity.y = Mathf.Max(velocity.y, -max_fall_speed);
+        }
+
+        rb.MovePosition(rb.position + (velocity * Time.fixedDeltaTime) - new Vector2(0,groundOffset));
+    }
+
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.red;
+        Gizmos.DrawRay(GetComponent<Rigidbody2D>().position + new Vector2(-0.5f, 0f), Vector2.down);
+        Gizmos.DrawRay(GetComponent<Rigidbody2D>().position + new Vector2(0.5f, 0f), Vector2.down);
     }
 }
