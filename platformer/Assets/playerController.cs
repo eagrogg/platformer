@@ -77,11 +77,18 @@ public class playerController : MonoBehaviour
             velocity.x = Mathf.MoveTowards(velocity.x, 0, friction);
         }
 
-        groundCheckL = Physics2D.Raycast(rb.position + new Vector2(-0.5f, 0), Vector2.down, 1, mask);
-        groundCheckR = Physics2D.Raycast(rb.position + new Vector2(0.5f, 0), Vector2.down, 1, mask);
+        bool isGrounded = false;
+        if(velocity.y < 0)
+        {
+            groundCheckL = Physics2D.Raycast(rb.position + new Vector2(-0.5f, 0), Vector2.down, 1, mask);
+            groundCheckR = Physics2D.Raycast(rb.position + new Vector2(0.5f, 0), Vector2.down, 1, mask);
+            isGrounded = (groundCheckL || groundCheckR);
+        }
+
+        
         float groundOffset = 0;
 
-        if (groundCheckL || groundCheckR)
+        if (isGrounded)
         {
             groundOffset = Mathf.Max(groundCheckL.distance, groundCheckR.distance) - 0.5f;
             velocity.y = 0;
@@ -89,6 +96,7 @@ public class playerController : MonoBehaviour
             if (jumpCheck)
             {
                 velocity.y = jumpForce;
+                isGrounded = false;
             }
         }
         else
